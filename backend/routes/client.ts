@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { getAllClients } from "../services/client.service";
+import { getAllClientsController } from "../controllers/client.controller";
 const clientRouter = Router();
 
-clientRouter.get("/", getAllClients);
+clientRouter.get("/", getAllClientsController);
 
 export default clientRouter;
