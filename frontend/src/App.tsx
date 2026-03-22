@@ -1,5 +1,5 @@
 import "./index.css"
-import ClientsBar from "./components/ClientsBar"
+import ClientsBar from "./components/workspace/ClientsBar"
 import ClientsPage from "./components/pages/ClientsPage"
 import {
   QueryClient,

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { v1Api } from "@/api/api";
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import type { Client } from "@/types/task";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ClientsBar({ activeClient, setActiveClient }: { activeClient: Client | undefined, setActiveClient: (client: Client) => void }) {
