@@ -1,8 +1,8 @@
-import type { Client, TaskData } from "@/types/task"
+import type { Client, TaskData, TaskStatus } from "@/types/task"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { v1Api } from "@/api/api"
 import { Skeleton } from "../ui/skeleton"
-import { columns, DataTable } from "../workspace/ClientsTable"
+import { createColumns, DataTable } from "../workspace/ClientsTable"
 import { Button } from "../ui/button"
 import { useState } from "react"
 import AddTaskModal from "../modals/AddTaskModal"
@@ -29,12 +29,24 @@ export default function ClientsPage({ activeClient }: {
         enabled: !!activeClient?.id
     })
 
-    const taskMutation = useMutation({
+    const createTaskMutation = useMutation({
         mutationFn: (task: TaskData) => v1Api.createTask(task, activeClient?.id as string),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tasks', activeClient?.id] })
             setShowAddTaskModal(false)
             toast.success("Task created successfully")
+        },
+        onError: (error: Error) => {
+            toast.error(error.message)
+        }
+    })
+
+    const updateStatusMutation = useMutation({
+        mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) =>
+            v1Api.updateTaskStatus(activeClient?.id as string, taskId, status),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks', activeClient?.id] })
+            toast.success("Status updated successfully")
         },
         onError: (error: Error) => {
             toast.error(error.message)
@@ -60,12 +72,15 @@ export default function ClientsPage({ activeClient }: {
             </Button>
         </div>
         <div className="flex flex-col gap-2">
-            <DataTable columns={columns} data={data} />
+            <DataTable
+                columns={createColumns(updateStatusMutation)}
+                data={data}
+            />
         </div>
         <AddTaskModal
             showAddTaskModal={showAddTaskModal}
             setShowAddTaskModal={setShowAddTaskModal}
-            onSubmit={(task) => taskMutation.mutateAsync(task) as Promise<void>}
+            onSubmit={(task) => createTaskMutation.mutateAsync(task) as Promise<void>}
         />
     </div>
 }

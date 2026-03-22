@@ -20,8 +20,8 @@ export const v1Api = {
         const res = await axiosInstance.post(`/tasks/${clientId}`, task)
         return res.data
     },
-    updateTaskStatus: async (taskId: string, status: TaskStatus) => {
-        const res = await axiosInstance.put(`/tasks/${taskId}`, { status })
+    updateTaskStatus: async (clientId: string, taskId: string, status: TaskStatus) => {
+        const res = await axiosInstance.put(`/tasks/${clientId}/${taskId}/status`, { status })
         return res.data
     }
 }
