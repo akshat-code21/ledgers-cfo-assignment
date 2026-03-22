@@ -5,7 +5,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(1).max(50),
   description: z.string().min(1).max(100),
   category: z.string().min(1).max(50),
-  due_date: z.date(),
+  due_date: z.coerce.date(),
   status: z.enum([
     TaskStatus.PENDING,
     TaskStatus.COMPLETED,
