@@ -57,7 +57,8 @@ const ALL_FILTER_VALUE = "all"
 
 export function isTaskOverdue(task: TaskData): boolean {
   const dueDate = typeof task.due_date === "string" ? new Date(task.due_date) : task.due_date
-  return dueDate < new Date()
+  const isPending = task.status === "PENDING"
+  return isPending && dueDate < new Date()
 }
 
 export const TASK_TABLE_FILTER_CONFIG: FilterConfig[] = [
