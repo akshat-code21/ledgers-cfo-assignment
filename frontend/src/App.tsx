@@ -16,12 +16,19 @@ function App() {
   return (
     <>
       <QueryClientProvider client={queryClient}>
-        <div className="grid grid-cols-12 w-full h-screen">
-          <div className="col-span-3">
-            <ClientsBar activeClient={activeClient} setActiveClient={setActiveClient} />
-          </div>
-          <div className="col-span-9">
-            <ClientsPage activeClient={activeClient} />
+        <div className="flex flex-col w-full h-screen bg-background">
+          <header className="flex items-center px-6 h-12 border-b border-border/60 shrink-0">
+            <h1 className="text-sm font-heading font-semibold tracking-tight text-foreground">
+              Ledgers CFO
+            </h1>
+          </header>
+          <div className="grid grid-cols-12 flex-1 min-h-0">
+            <div className="col-span-3 border-r border-border/60">
+              <ClientsBar activeClient={activeClient} setActiveClient={setActiveClient} />
+            </div>
+            <div className="col-span-9 overflow-y-auto">
+              <ClientsPage activeClient={activeClient} />
+            </div>
           </div>
         </div>
         <ReactQueryDevtools initialIsOpen={false} />

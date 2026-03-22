@@ -3,16 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { v1Api } from "@/api/api"
 import { Skeleton } from "../ui/skeleton"
 import {
-  createColumns,
-  DataTable,
-  isTaskOverdue,
-  TASK_TABLE_FILTER_CONFIG,
+    createColumns,
+    DataTable,
+    isTaskOverdue,
+    TASK_TABLE_FILTER_CONFIG,
 } from "../workspace/ClientsTable"
 import { Button } from "../ui/button"
 import { useState } from "react"
 import AddTaskModal from "../modals/AddTaskModal"
 import { toast } from "sonner"
 import TaskCountCard from "../cards/TaskCountCard"
+import { PlusIcon } from "lucide-react"
 
 export default function ClientsPage({ activeClient }: {
     activeClient: Client | undefined
@@ -22,11 +23,11 @@ export default function ClientsPage({ activeClient }: {
     const queryClient = useQueryClient()
 
     const entityTypeMap = {
-        "PRIVATE_LIMITED": "PVT",
-        "PUBLIC": "PBL",
-        "ONE_PERSON_COMPANY": "OPC",
+        "PRIVATE_LIMITED": "Private Limited",
+        "PUBLIC": "Public",
+        "ONE_PERSON_COMPANY": "One Person Company",
         "LLP": "LLP",
-        "NON_PROFIT": "NPO"
+        "NON_PROFIT": "Non-Profit"
     }
 
     const { data, isLoading, error } = useQuery({
@@ -59,46 +60,81 @@ export default function ClientsPage({ activeClient }: {
         }
     })
 
-    if (isLoading) return <Skeleton className="w-full h-full">
-        <div className="flex flex-col gap-2">
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
+    if (!activeClient) return (
+        <div className="w-full h-full flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">Select a client to view tasks</p>
         </div>
-    </Skeleton>
+    )
 
-    if (error) return <div className="w-full h-full">Error: {(error as Error).message}</div>
-    if (!data) return <div className="p-5 w-full h-full">No tasks found</div>
+    if (isLoading) return (
+        <div className="w-full h-full p-6 flex flex-col gap-4">
+            <Skeleton className="w-48 h-7 rounded-md" />
+            <div className="flex gap-3">
+                {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="flex-1 h-20 rounded-xl" />
+                ))}
+            </div>
+            <Skeleton className="w-full h-48 rounded-xl" />
+        </div>
+    )
 
-    return <div className="w-full h-full p-5 flex flex-col gap-5">
-        <h1 className="text-2xl font-bold">{activeClient?.company_name}</h1>
-        <div className="flex justify-between items-center">
-            <h2 className="text-sm text-foreground">{activeClient?.country} | {entityTypeMap[activeClient?.entity_type as keyof typeof entityTypeMap]} | {(data.data ?? []).length} tasks</h2>
-            <Button variant={"secondary"} className="bg-amber-400 text-xl flex flex-col gap-2 border py-3! px-4! rounded-md hover:bg-amber-500" onClick={() => setShowAddTaskModal(true)}>
-                <span className="text-sm">Add Task</span>
-            </Button>
+    if (error) return (
+        <div className="w-full h-full flex items-center justify-center">
+            <p className="text-sm text-destructive">{(error as Error).message}</p>
         </div>
-        <div className="flex gap-2">
-            <TaskCountCard taskCount={data.metadata.pending} status="PENDING" />
-            <TaskCountCard taskCount={data.metadata.completed} status="COMPLETED" />
-            <TaskCountCard taskCount={data.metadata.inProgress} status="IN_PROGRESS" />
-            <TaskCountCard taskCount={data.metadata.cancelled} status="CANCELLED" />
+    )
+
+    if (!data) return (
+        <div className="w-full h-full flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">No tasks found</p>
         </div>
-        <div className="flex flex-col gap-2">
-            <DataTable
-                columns={createColumns(updateStatusMutation)}
-                data={data.data ?? []}
-                filterConfig={TASK_TABLE_FILTER_CONFIG}
-                getRowClassName={(row) =>
-                  isTaskOverdue(row.original as TaskData)
-                    ? "bg-destructive/10 hover:bg-destructive/15"
-                    : undefined
-                }
+    )
+
+    return (
+        <div className="w-full h-full p-6 flex flex-col gap-5">
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-xl font-heading font-semibold tracking-tight text-foreground">
+                        {activeClient?.company_name}
+                    </h1>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {activeClient?.country} · {entityTypeMap[activeClient?.entity_type as keyof typeof entityTypeMap]} · {(data.data ?? []).length} tasks
+                    </p>
+                </div>
+                <Button
+                    onClick={() => setShowAddTaskModal(true)}
+                    size="sm"
+                >
+                    <PlusIcon className="size-4" />
+                    Add Task
+                </Button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+                <TaskCountCard taskCount={data.metadata.pending} status="PENDING" />
+                <TaskCountCard taskCount={data.metadata.completed} status="COMPLETED" />
+                <TaskCountCard taskCount={data.metadata.inProgress} status="IN_PROGRESS" />
+                <TaskCountCard taskCount={data.metadata.cancelled} status="CANCELLED" />
+            </div>
+
+            <div className="flex flex-col gap-2 flex-1 min-h-0">
+                <DataTable
+                    columns={createColumns(updateStatusMutation)}
+                    data={data.data ?? []}
+                    filterConfig={TASK_TABLE_FILTER_CONFIG}
+                    getRowClassName={(row) =>
+                        isTaskOverdue(row.original as TaskData)
+                            ? "bg-destructive/5 hover:bg-destructive/10"
+                            : undefined
+                    }
+                />
+            </div>
+
+            <AddTaskModal
+                showAddTaskModal={showAddTaskModal}
+                setShowAddTaskModal={setShowAddTaskModal}
+                onSubmit={(task) => createTaskMutation.mutateAsync(task) as Promise<void>}
             />
         </div>
-        <AddTaskModal
-            showAddTaskModal={showAddTaskModal}
-            setShowAddTaskModal={setShowAddTaskModal}
-            onSubmit={(task) => createTaskMutation.mutateAsync(task) as Promise<void>}
-        />
-    </div>
+    )
 }

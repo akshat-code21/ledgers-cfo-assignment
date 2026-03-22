@@ -90,6 +90,9 @@ export const createColumns = (
     {
         accessorKey: "title",
         header: "Title",
+        cell: ({ getValue }) => {
+            return <span className="font-medium">{getValue() as string}</span>
+        },
     },
     {
         accessorKey: "category",
@@ -119,7 +122,17 @@ export const createColumns = (
         },
         cell: ({ getValue }) => {
             const value = getValue() as Priority
-            return PRIORITY_OPTIONS.find((o) => o.value === value)?.label ?? value
+            const label = PRIORITY_OPTIONS.find((o) => o.value === value)?.label ?? value
+            const colorMap: Record<Priority, string> = {
+                HIGH: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+                MEDIUM: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                LOW: "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300",
+            }
+            return (
+                <span className={cn("status-chip", colorMap[value])}>
+                    {label}
+                </span>
+            )
         },
     },
     {
@@ -131,7 +144,18 @@ export const createColumns = (
         },
         cell: ({ getValue }) => {
             const value = getValue() as TaskStatus
-            return STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value
+            const label = STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value
+            const colorMap: Record<TaskStatus, string> = {
+                PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                IN_PROGRESS: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+                COMPLETED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+                CANCELLED: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+            }
+            return (
+                <span className={cn("status-chip", colorMap[value])}>
+                    {label}
+                </span>
+            )
         },
     },
     {
@@ -144,7 +168,7 @@ export const createColumns = (
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none p-0",
+                "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg p-0",
                 "hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                 "disabled:pointer-events-none disabled:opacity-50"
               )}
@@ -246,7 +270,7 @@ export function DataTable<TData, TValue>({
           </span>
         </div>
       )}
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-xl border border-border/60">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
