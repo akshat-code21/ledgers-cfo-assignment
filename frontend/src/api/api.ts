@@ -10,7 +10,8 @@ const axiosInstance = axios.create({
 export const v1Api = {
     getAllClients: async () => {
         const res = await axiosInstance.get('/clients')
-        return res.data
+        console.log(res.data);
+        return res.data.data
     },
     getTasks: async (clientId: string) => {
         const res = await axiosInstance.get(`/tasks/${clientId}`)

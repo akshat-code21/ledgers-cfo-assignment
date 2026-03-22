@@ -11,5 +11,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@ui': path.resolve(__dirname, './src/components/ui'),
     },
+    dedupe: ['react', 'react-dom'],
   },
 })
