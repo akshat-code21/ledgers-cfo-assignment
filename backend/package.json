@@ -5,7 +5,8 @@
   "scripts": {
     "start": "bun run index.ts",
     "dev": "bun run --watch index.ts",
-    "seed": "bun run scripts/seed.ts"
+    "seed": "bun run scripts/seed.ts",
+    "postinstall": "prisma generate"
   },
   "private": true,
   "devDependencies": {
