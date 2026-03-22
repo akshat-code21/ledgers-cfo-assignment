@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun run --watch index.ts"
+    "dev": "bun run --watch index.ts",
+    "seed": "bun run scripts/seed.ts"
   },
   "private": true,
   "devDependencies": {
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "cors": "^2.8.6",

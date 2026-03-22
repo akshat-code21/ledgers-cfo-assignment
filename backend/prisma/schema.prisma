@@ -13,8 +13,11 @@ datasource db {
 }
 
 enum EntityType {
-  COMPANY
-  INDIVIDUAL
+  PRIVATE_LIMITED
+  PUBLIC
+  ONE_PERSON_COMPANY
+  LLP
+  NON_PROFIT
 }
 
 model Client {
