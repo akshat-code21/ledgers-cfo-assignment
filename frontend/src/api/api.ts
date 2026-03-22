@@ -15,7 +15,8 @@ export const v1Api = {
     },
     getTasks: async (clientId: string) => {
         const res = await axiosInstance.get(`/tasks/${clientId}`)
-        return res.data
+        console.log(res.data);
+        return res.data.data
     },
     createTask: async (task: TaskData) => {
         const res = await axiosInstance.post('/tasks', task)

@@ -3,6 +3,8 @@ export type TaskStatus = "PENDING" | "COMPLETED" | "IN_PROGRESS" | "CANCELLED";
 export type EntityType = "PRIVATE_LIMITED" | "PUBLIC" | "ONE_PERSON_COMPANY" | "LLP" | "NON_PROFIT";
 
 export type TaskData = {
+  id: string;
+  client_id: string;
   title: string;
   description: string;
   category: string;
