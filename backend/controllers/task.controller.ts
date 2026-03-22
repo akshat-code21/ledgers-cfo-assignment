@@ -10,10 +10,17 @@ import { createTaskSchema, updateTaskStatusSchema } from "../validators/task";
 export const getAllTasksController = async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const tasks = await getAllTasks(clientId as string);
+    const { tasks, total, pending, completed, inProgress, cancelled } = await getAllTasks(clientId as string);
     res.status(200).json({
       success: true,
       data: tasks,
+      metadata : {
+        total : total,
+        pending : pending,
+        completed : completed,
+        inProgress : inProgress,
+        cancelled : cancelled,
+      }
     });
   } catch (error) {
     res.status(500).json({

@@ -25,7 +25,11 @@ export default function AddTaskForm({ onSubmit }: { onSubmit: (task: TaskData) =
         title: z.string().min(1).max(50),
         description: z.string().min(1).max(100),
         category: z.string().min(1).max(50),
-        due_date: z.coerce.date(),
+        due_date: z.coerce.date().refine((date) => {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            return date >= today
+        }, "Due date cannot be in the past"),
         status: z.enum([
             "PENDING",
             "COMPLETED",
@@ -213,6 +217,13 @@ export default function AddTaskForm({ onSubmit }: { onSubmit: (task: TaskData) =
                                                 selected={date}
                                                 captionLayout="dropdown"
                                                 defaultMonth={date}
+                                                disabled={{
+                                                    before: (() => {
+                                                        const today = new Date()
+                                                        today.setHours(0, 0, 0, 0)
+                                                        return today
+                                                    })(),
+                                                }}
                                                 onSelect={handleDateSelect}
                                             />
                                         </PopoverContent>

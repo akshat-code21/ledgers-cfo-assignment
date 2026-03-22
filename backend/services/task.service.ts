@@ -8,8 +8,40 @@ export const getAllTasks = async (clientId: string) => {
       where: {
         client_id: clientId,
       },
+      orderBy: { created_at: "asc" },
     });
-    return tasks;
+    const pending = await client.task.count({
+      where: {
+        client_id: clientId,
+        status: "PENDING",
+      },
+    });
+    const completed = await client.task.count({
+      where: {
+        client_id: clientId,
+        status: "COMPLETED",
+      },
+    });
+    const inProgress = await client.task.count({
+      where: {
+        client_id: clientId,
+        status: "IN_PROGRESS",
+      },
+    });
+    const cancelled = await client.task.count({
+      where: {
+        client_id: clientId,
+        status: "CANCELLED",
+      },
+    });
+    return {
+      tasks,
+      total : tasks.length,
+      pending,
+      completed,
+      inProgress,
+      cancelled,
+    };
   } catch (error) {
     throw new Error("Failed to get tasks for client");
   }

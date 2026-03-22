@@ -5,7 +5,13 @@ export const createTaskSchema = z.object({
   title: z.string().min(1).max(50),
   description: z.string().min(1).max(100),
   category: z.string().min(1).max(50),
-  due_date: z.coerce.date(),
+  due_date: z.coerce
+    .date()
+    .refine((date) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date >= today;
+    }, "Due date cannot be in the past"),
   status: z.enum([
     TaskStatus.PENDING,
     TaskStatus.COMPLETED,

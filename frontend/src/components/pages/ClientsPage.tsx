@@ -2,11 +2,17 @@ import type { Client, TaskData, TaskStatus } from "@/types/task"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { v1Api } from "@/api/api"
 import { Skeleton } from "../ui/skeleton"
-import { createColumns, DataTable } from "../workspace/ClientsTable"
+import {
+  createColumns,
+  DataTable,
+  isTaskOverdue,
+  TASK_TABLE_FILTER_CONFIG,
+} from "../workspace/ClientsTable"
 import { Button } from "../ui/button"
 import { useState } from "react"
 import AddTaskModal from "../modals/AddTaskModal"
 import { toast } from "sonner"
+import TaskCountCard from "../cards/TaskCountCard"
 
 export default function ClientsPage({ activeClient }: {
     activeClient: Client | undefined
@@ -66,15 +72,27 @@ export default function ClientsPage({ activeClient }: {
     return <div className="w-full h-full p-5 flex flex-col gap-5">
         <h1 className="text-2xl font-bold">{activeClient?.company_name}</h1>
         <div className="flex justify-between items-center">
-            <h2 className="text-sm text-foreground">{activeClient?.country} | {entityTypeMap[activeClient?.entity_type as keyof typeof entityTypeMap]} | {data.length} tasks</h2>
+            <h2 className="text-sm text-foreground">{activeClient?.country} | {entityTypeMap[activeClient?.entity_type as keyof typeof entityTypeMap]} | {(data.data ?? []).length} tasks</h2>
             <Button variant={"secondary"} className="bg-amber-400 text-xl flex flex-col gap-2 border py-3! px-4! rounded-md hover:bg-amber-500" onClick={() => setShowAddTaskModal(true)}>
                 <span className="text-sm">Add Task</span>
             </Button>
         </div>
+        <div className="flex gap-2">
+            <TaskCountCard taskCount={data.metadata.pending} status="PENDING" />
+            <TaskCountCard taskCount={data.metadata.completed} status="COMPLETED" />
+            <TaskCountCard taskCount={data.metadata.inProgress} status="IN_PROGRESS" />
+            <TaskCountCard taskCount={data.metadata.cancelled} status="CANCELLED" />
+        </div>
         <div className="flex flex-col gap-2">
             <DataTable
                 columns={createColumns(updateStatusMutation)}
-                data={data}
+                data={data.data ?? []}
+                filterConfig={TASK_TABLE_FILTER_CONFIG}
+                getRowClassName={(row) =>
+                  isTaskOverdue(row.original as TaskData)
+                    ? "bg-destructive/10 hover:bg-destructive/15"
+                    : undefined
+                }
             />
         </div>
         <AddTaskModal

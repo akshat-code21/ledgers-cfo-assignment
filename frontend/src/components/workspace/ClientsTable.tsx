@@ -1,9 +1,18 @@
 "use client"
 
+import * as React from "react"
 import { format } from "date-fns"
 import type { Priority, TaskData, TaskStatus } from "@/types/task"
 import type { UseMutationResult } from "@tanstack/react-query"
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table"
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type Row,
+} from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -18,6 +27,12 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select"
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "PENDING", label: "Pending" },
@@ -30,6 +45,38 @@ const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "LOW", label: "Low" },
   { value: "MEDIUM", label: "Medium" },
   { value: "HIGH", label: "High" },
+]
+
+export interface FilterConfig {
+  columnId: string
+  label: string
+  options: { value: string; label: string }[]
+}
+
+const ALL_FILTER_VALUE = "all"
+
+export function isTaskOverdue(task: TaskData): boolean {
+  const dueDate = typeof task.due_date === "string" ? new Date(task.due_date) : task.due_date
+  return dueDate < new Date()
+}
+
+export const TASK_TABLE_FILTER_CONFIG: FilterConfig[] = [
+  {
+    columnId: "status",
+    label: "Status",
+    options: [
+      { value: ALL_FILTER_VALUE, label: "All statuses" },
+      ...STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    ],
+  },
+  {
+    columnId: "priority",
+    label: "Priority",
+    options: [
+      { value: ALL_FILTER_VALUE, label: "All priorities" },
+      ...PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    ],
+  },
 ]
 
 export const createColumns = (
@@ -50,16 +97,25 @@ export const createColumns = (
     {
         accessorKey: "due_date",
         header: "Due Date",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
             const value = getValue() as string | Date
             if (!value) return "-"
             const date = typeof value === "string" ? new Date(value) : value
-            return format(date, "PPp")
+            const overdue = isTaskOverdue(row.original)
+            return (
+                <span className={cn(overdue && "font-medium text-destructive")}>
+                    {format(date, "PPp")}
+                </span>
+            )
         },
     },
     {
         accessorKey: "priority",
         header: "Priority",
+        filterFn: (row, id, value) => {
+            if (!value) return true
+            return row.getValue(id) === value
+        },
         cell: ({ getValue }) => {
             const value = getValue() as Priority
             return PRIORITY_OPTIONS.find((o) => o.value === value)?.label ?? value
@@ -68,6 +124,10 @@ export const createColumns = (
     {
         accessorKey: "status",
         header: "Status",
+        filterFn: (row, id, value) => {
+            if (!value) return true
+            return row.getValue(id) === value
+        },
         cell: ({ getValue }) => {
             const value = getValue() as TaskStatus
             return STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value
@@ -123,19 +183,68 @@ export const createColumns = (
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
+    filterConfig?: FilterConfig[]
+    getRowClassName?: (row: Row<TData>) => string | undefined
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  filterConfig,
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+
   const table = useReactTable({
-    data,
+    data: data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    state: {
+      columnFilters,
+    },
   })
 
   return (
+    <div className="space-y-4">
+      {filterConfig && filterConfig.length > 0 && (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {filterConfig.map(({ columnId, label, options }) => {
+              const currentValue = (table.getColumn(columnId)?.getFilterValue() as string) ?? ALL_FILTER_VALUE
+              const displayLabel = options.find((o) => o.value === currentValue)?.label ?? `All ${label}`
+
+              return (
+            <div key={columnId} className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">{label}:</span>
+              <Select
+                value={currentValue}
+                onValueChange={(value) =>
+                  table.getColumn(columnId)?.setFilterValue(
+                    value === ALL_FILTER_VALUE ? undefined : value
+                  )
+                }
+              >
+                <SelectTrigger className="w-[140px] h-8 normal-case">
+                  {displayLabel}
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map(({ value, label: optLabel }) => (
+                    <SelectItem key={value} value={value} className="normal-case">
+                      {optLabel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )})}
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} of {(data ?? []).length} row(s)
+          </span>
+        </div>
+      )}
     <div className="overflow-hidden rounded-md border">
       <Table>
         <TableHeader>
@@ -162,6 +271,7 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                className={getRowClassName?.(row)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
@@ -179,6 +289,7 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
+    </div>
     </div>
   )
 }
