@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { v1Api } from "@/api/api"
 import { Skeleton } from "../ui/skeleton"
 import {
+    buildTaskFilterConfig,
     createColumns,
     DataTable,
     isTaskOverdue,
-    TASK_TABLE_FILTER_CONFIG,
 } from "../workspace/ClientsTable"
 import { Button } from "../ui/button"
 import { useState } from "react"
@@ -121,7 +121,7 @@ export default function ClientsPage({ activeClient }: {
                 <DataTable
                     columns={createColumns(updateStatusMutation)}
                     data={data.data ?? []}
-                    filterConfig={TASK_TABLE_FILTER_CONFIG}
+                    filterConfig={buildTaskFilterConfig(data.data ?? [])}
                     getRowClassName={(row) =>
                         isTaskOverdue(row.original as TaskData)
                             ? "bg-destructive/5 hover:bg-destructive/10"

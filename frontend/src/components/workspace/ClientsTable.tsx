@@ -80,6 +80,18 @@ export const TASK_TABLE_FILTER_CONFIG: FilterConfig[] = [
   },
 ]
 
+export function buildTaskFilterConfig(tasks: TaskData[]): FilterConfig[] {
+  const uniqueCategories = [...new Set(tasks.map((t) => t.category).filter(Boolean))].sort()
+  const categoryOptions = [
+    { value: ALL_FILTER_VALUE, label: "All categories" },
+    ...uniqueCategories.map((cat) => ({ value: cat, label: cat })),
+  ]
+  return [
+    ...TASK_TABLE_FILTER_CONFIG,
+    { columnId: "category", label: "Category", options: categoryOptions },
+  ]
+}
+
 export const createColumns = (
   updateStatusMutation: UseMutationResult<
     unknown,
@@ -97,6 +109,10 @@ export const createColumns = (
     {
         accessorKey: "category",
         header: "Category",
+        filterFn: (row, id, value) => {
+            if (!value) return true
+            return row.getValue(id) === value
+        },
     },
     {
         accessorKey: "due_date",

@@ -133,7 +133,7 @@ ledgers-cfo/
 - No auth or user management—the app is single-user and demo-oriented.
 - Clients are read-only (no create/edit/delete)
 - Tasks can only have their status updated. 
-- Category is free text instead of an enum, and filtering is by Status and Priority rather than by Category for more predictable filters. 
+- Category is free text instead of an enum, and filtering is by Status, Priority and Category. Currently category filtering is based on the unique categories we have in the database and not predefined enums. 
 - New tasks cannot have past due dates. 
 - CORS is fully open, and errors may leak implementation details. 
 - Scope was kept small to ship quickly 
