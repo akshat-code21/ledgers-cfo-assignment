@@ -5,6 +5,7 @@ import {
   updateTaskStatus,
 } from "../services/task.service";
 import type { Request, Response } from "express";
+import { createTaskSchema, updateTaskStatusSchema } from "../validators/task";
 
 export const getAllTasksController = async (req: Request, res: Response) => {
   try {
@@ -26,7 +27,15 @@ export const getAllTasksController = async (req: Request, res: Response) => {
 export const createTaskController = async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const task = await createTask(clientId as string, req.body);
+    const { success, data: taskData } = createTaskSchema.safeParse(req.body);
+    if (!success) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid request body",
+      });
+      return;
+    }
+    const task = await createTask(clientId as string, taskData);
     res.status(200).json({
       success: true,
       data: task,
@@ -46,10 +55,20 @@ export const updateTaskStatusController = async (
 ) => {
   try {
     const { clientId, taskId } = req.params;
+    const { success, data: taskData } = updateTaskStatusSchema.safeParse(
+      req.body,
+    );
+    if (!success) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid request body",
+      });
+      return;
+    }
     const task = await updateTaskStatus(
       clientId as string,
       taskId as string,
-      req.body.status as TaskStatus,
+      taskData.status as TaskStatus,
     );
     res.status(200).json({
       success: true,
